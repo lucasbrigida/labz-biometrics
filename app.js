@@ -27,6 +27,7 @@ function onPointerMove(event) {
 }
 
 function onPointerDown(event) {
+  console.log(event);
   const x = event.x;
   const y = event.y;
 
@@ -149,8 +150,6 @@ function setup() {
   heatmap = h337.create({
     container: document.querySelector("#heatmap"),
   });
-
-  heatmap.setDataMax(2);
 }
 
 // Main
