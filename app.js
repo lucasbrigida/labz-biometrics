@@ -12,9 +12,16 @@ let pressures = [];
 let pressureAvg = 0;
 let dS = 0;
 let dT = 0;
+let maxVelocity = 0;
 let pointerType = "";
 var heatmap;
 let intervals = [];
+let trusted = null;
+let session = {
+  movements: [],
+  clicks: [],
+  velocities: []
+};
 
 // Custom functions
 // ------------------------------------------------------------
@@ -27,12 +34,16 @@ function onPointerMove(event) {
 }
 
 function onPointerDown(event) {
-  console.log(event);
   const x = event.x;
   const y = event.y;
 
-  heatmap.addData({ x, y });
+  console.log(event);
+  
   pressures.push(event.pressure);
+  session.clicks.push([x, y]);
+  trusted = event.isTrusted;
+
+  heatmap.addData({ x, y });
 }
 
 function clearMeasures(type) {
@@ -85,6 +96,8 @@ function measureMovements() {
     const [x1, y1] = [A.clientX, A.clientY];
     const [x2, y2] = [B.clientX, B.clientY];
 
+    session.movements.push([x1, y1]);
+
     distances.push(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)));
   }
 
@@ -95,6 +108,8 @@ function measureMovements() {
 
   // Distância (px)
   dS = distances.reduce((a, b) => a + b);
+  maxVelocity = Math.max(maxVelocity, dS);
+  session.velocities.push(dS);
 
   // Tempo decorrido (s)
   dT = duration / 1000;
@@ -114,6 +129,9 @@ function showInfo() {
   document.querySelector("#velocity .value").innerText = (dS / 1).toFixed(2);
   document.querySelector("#pressure .value").innerText = pressureAvg;
   document.querySelector("#pointer-type .value").innerText = pointerType;
+  document.querySelector("#max-velocity .value").innerText = maxVelocity.toFixed(2);
+  document.querySelector("#movements .value").innerText = session.movements.length;
+  document.querySelector("#clicks .value").innerText = session.clicks.length;
 }
 
 function onStop() {
