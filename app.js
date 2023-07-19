@@ -13,10 +13,11 @@ let pressureAvg = 0;
 let dS = 0;
 let dT = 0;
 let maxVelocity = 0;
+let clickTimes = [];
+let clickVelAvg = 0;
 let pointerType = "";
 var heatmap;
 let intervals = [];
-let trusted = null;
 let session = {
   movements: [],
   clicks: [],
@@ -37,11 +38,9 @@ function onPointerDown(event) {
   const x = event.x;
   const y = event.y;
 
-  console.log(event);
-  
   pressures.push(event.pressure);
   session.clicks.push([x, y]);
-  trusted = event.isTrusted;
+  clickTimes.push(event.timeStamp);
 
   heatmap.addData({ x, y });
 }
@@ -125,6 +124,17 @@ function measurePressure() {
   clearMeasures("pointerdown");
 }
 
+function measureClickVelocity() {
+  const _times = clickTimes.map(time => Number((time/1000).toFixed(2)));
+
+  if (!_times.length) {
+    return;
+  }
+
+  const times = _times.reduce((a, b) => b - a);
+  clickVelAvg = (times / _times.length).toFixed(2);
+}
+
 function showInfo() {
   document.querySelector("#velocity .value").innerText = (dS / 1).toFixed(2);
   document.querySelector("#pressure .value").innerText = pressureAvg;
@@ -132,6 +142,7 @@ function showInfo() {
   document.querySelector("#max-velocity .value").innerText = maxVelocity.toFixed(2);
   document.querySelector("#movements .value").innerText = session.movements.length;
   document.querySelector("#clicks .value").innerText = session.clicks.length;
+  document.querySelector("#clicks-velocity .value").innerText = clickVelAvg;
 }
 
 function onStop() {
@@ -181,6 +192,9 @@ function main() {
 
   // Exibe informações
   intervals.push(setInterval(showInfo, 1000));
+
+  // Cálculo de intervalo de click
+  intervals.push(setInterval(measureClickVelocity, 1000));
 }
 
 // Document Listeners
